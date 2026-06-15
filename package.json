@@ -1,0 +1,16 @@
+{
+  "name": "asset-portal-cli",
+  "version": "0.1.0",
+  "description": "Seed and manage an Asset Portal from the command line (macOS/Linux/Windows).",
+  "type": "module",
+  "bin": {
+    "asset-portal": "bin/asset-portal.js"
+  },
+  "scripts": {
+    "start": "node bin/asset-portal.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "files": ["bin", "src", "README.md"]
+}

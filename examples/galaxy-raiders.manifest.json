@@ -1,0 +1,45 @@
+{
+  "sections": [
+    { "name": "Character Art", "description": "Player ship and enemy sprites" },
+    { "name": "Soundtrack", "description": "Looping background music" },
+    { "name": "SFX", "description": "Short gameplay sound effects" }
+  ],
+  "assets": [
+    {
+      "key": "hero_ship",
+      "name": "Hero ship sprite",
+      "type": "image",
+      "section": "Character Art",
+      "description": "Top-down player ship. Clean sci-fi style, faces upward, transparent background. Matches the neon palette in the reference screenshots.",
+      "requirements": { "width": 256, "height": 256, "format": "png", "max_kb": 120 },
+      "placeholder": "placeholders/hero_ship.png"
+    },
+    {
+      "key": "enemy_drone",
+      "name": "Enemy drone sprite",
+      "type": "image",
+      "section": "Character Art",
+      "description": "Small hostile drone, reads clearly at 1/4 screen size.",
+      "requirements": { "width": 128, "height": 128, "format": "png", "max_kb": 80 },
+      "placeholder": "placeholders/enemy_drone.png"
+    },
+    {
+      "key": "main_theme",
+      "name": "Main menu theme",
+      "type": "music",
+      "section": "Soundtrack",
+      "description": "Upbeat synthwave loop for the main menu. Must loop seamlessly.",
+      "requirements": { "format": "wav", "duration_sec": 60, "loop": true, "sample_rate": 44100, "channels": 2 },
+      "placeholder": "placeholders/main_theme.wav"
+    },
+    {
+      "key": "laser_shot",
+      "name": "Laser shot SFX",
+      "type": "sound",
+      "section": "SFX",
+      "description": "Short punchy laser zap for the player's primary weapon.",
+      "requirements": { "format": "wav", "duration_sec": 0.4, "max_kb": 60 },
+      "placeholder": "placeholders/laser_shot.wav"
+    }
+  ]
+}
