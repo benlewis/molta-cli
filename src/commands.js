@@ -1,15 +1,29 @@
-import { resolve, dirname, isAbsolute } from "node:path";
-import { readFileSync, existsSync } from "node:fs";
-import { PortalClient } from "./client.js";
+import { resolve, dirname, isAbsolute, join } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { PortalClient, guessMime } from "./client.js";
 import { loadConfig, saveConfig, requireConfig, CONFIG_PATH } from "./config.js";
 
 const c = {
   dim: (s) => `\x1b[2m${s}\x1b[0m`,
   green: (s) => `\x1b[32m${s}\x1b[0m`,
   red: (s) => `\x1b[31m${s}\x1b[0m`,
+  yellow: (s) => `\x1b[33m${s}\x1b[0m`,
   cyan: (s) => `\x1b[36m${s}\x1b[0m`,
   bold: (s) => `\x1b[1m${s}\x1b[0m`,
 };
+
+const EXT_BY_MIME = {
+  "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif",
+  "audio/wav": "wav", "audio/x-wav": "wav", "audio/mpeg": "mp3", "audio/ogg": "ogg",
+  "video/mp4": "mp4", "application/json": "json", "font/ttf": "ttf", "font/otf": "otf",
+};
+function extFor(entry) {
+  try {
+    const m = new URL(entry.url).pathname.match(/\.([a-z0-9]+)$/i);
+    if (m) return m[1].toLowerCase();
+  } catch { /* ignore */ }
+  return EXT_BY_MIME[entry.mime_type] || "bin";
+}
 
 export async function cmdLogin(args) {
   const existing = loadConfig();
@@ -94,6 +108,51 @@ export async function cmdPush(args) {
   const client = new PortalClient(requireConfig());
   const v = await client.upload(key, resolve(process.cwd(), file), { isPlaceholder: !args.final });
   console.log(c.green(`✓ Uploaded ${key} as v${v.version_number}`));
+}
+
+export async function cmdBake(args) {
+  // Download every published asset and write a baked manifest, to bundle the
+  // assets directly into a production build of the game.
+  const out = resolve(process.cwd(), args.out || "AssetPortalBaked");
+  const client = new PortalClient(requireConfig());
+  const { project, assets } = await client.bake();
+  if (!assets.length) throw new Error("No published assets to bake yet (publish some via 'See in app' / 'Done').");
+
+  mkdirSync(out, { recursive: true });
+  console.log(`${c.bold("Baking")} ${assets.length} asset(s) from ${c.bold(project)} → ${out}`);
+
+  const baked = [];
+  const notFinal = [];
+  for (const a of assets) {
+    const file = `${a.key}.${extFor(a)}`;
+    process.stdout.write(`  ↓ ${a.key} … `);
+    const res = await fetch(a.url);
+    if (!res.ok) { console.log(c.red(`failed (${res.status})`)); continue; }
+    writeFileSync(join(out, file), Buffer.from(await res.arrayBuffer()));
+    baked.push({ key: a.key, name: a.name, type: a.type, version: a.version, checksum: a.checksum, file, metadata: a.metadata || {} });
+    if (!a.is_final) notFinal.push(a);
+    const tag = a.is_final ? c.green("done") : a.is_placeholder ? c.red("placeholder!") : c.yellow("preview");
+    console.log(`${file} ${c.dim("(")}${tag}${c.dim(")")}`);
+  }
+
+  const manifest = { project, baked_at: new Date().toISOString(), assets: baked };
+  writeFileSync(join(out, "asset-portal-manifest.json"), JSON.stringify(manifest, null, 2));
+
+  console.log("");
+  console.log(c.green(`✓ Baked ${baked.length} file(s)`) + ` + asset-portal-manifest.json`);
+  console.log(c.dim(`  Add the "${out.split("/").pop()}" folder to your app target (see SDK README) and ship in production.`));
+
+  if (notFinal.length) {
+    console.log("");
+    console.log(c.yellow(`⚠ ${notFinal.length} asset(s) are NOT finalized ("done") yet:`));
+    for (const a of notFinal) console.log(c.yellow(`    • ${a.key} (${a.status})`));
+    if (args["require-final"]) {
+      throw new Error("Aborting: --require-final set and not all assets are done.");
+    }
+    console.log(c.dim("  Mark them Done in the portal before shipping, or re-run with --require-final to enforce."));
+  } else {
+    console.log(c.green("  All assets are finalized — ready for production. 🚀"));
+  }
 }
 
 // ── Manifest validation ────────────────────────────────────────────────────

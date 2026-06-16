@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cmdLogin, cmdWhoami, cmdSeed, cmdPush } from "../src/commands.js";
+import { cmdLogin, cmdWhoami, cmdSeed, cmdPush, cmdBake } from "../src/commands.js";
 
 // Minimal argv parser: collects --flags (with values or boolean) and positionals.
 function parseArgs(argv) {
@@ -28,6 +28,8 @@ Usage:
                                                             Upsert assets and upload placeholders
   asset-portal push --key <asset_key> --file <path> [--final]
                                                             Upload a single version
+  asset-portal bake [--out <dir>] [--require-final]         Download published assets to bundle in
+                                                            a production build (default ./AssetPortalBaked)
 
 Environment:
   ASSET_PORTAL_URL, ASSET_PORTAL_TOKEN   override saved config
@@ -45,6 +47,7 @@ async function main() {
       case "whoami": await cmdWhoami(args); break;
       case "seed": await cmdSeed(args); break;
       case "push": await cmdPush(args); break;
+      case "bake": await cmdBake(args); break;
       case undefined: case "help": case "--help": case "-h":
         console.log(HELP); break;
       default:

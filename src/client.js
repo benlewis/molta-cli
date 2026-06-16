@@ -39,6 +39,9 @@ export class PortalClient {
   /** Verify the token and return { id, name, access_code, asset_count }. */
   project() { return this.#json("/api/cli/project"); }
 
+  /** All assets' published version + status + signed download URL, for baking. */
+  bake() { return this.#json("/api/cli/bake"); }
+
   /** Idempotently upsert sections + groups + assets. */
   seed(sections, groups, assets) {
     return this.#json("/api/cli/seed", { method: "POST", body: { sections, groups, assets } });
