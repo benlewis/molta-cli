@@ -39,9 +39,9 @@ export class PortalClient {
   /** Verify the token and return { id, name, access_code, asset_count }. */
   project() { return this.#json("/api/cli/project"); }
 
-  /** Idempotently upsert sections + assets. */
-  seed(sections, assets) {
-    return this.#json("/api/cli/seed", { method: "POST", body: { sections, assets } });
+  /** Idempotently upsert sections + groups + assets. */
+  seed(sections, groups, assets) {
+    return this.#json("/api/cli/seed", { method: "POST", body: { sections, groups, assets } });
   }
 
   /** Upload a placeholder file for an existing asset_key (multipart). */

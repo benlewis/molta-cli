@@ -43,7 +43,7 @@ export async function cmdSeed(args) {
 
   const manifest = JSON.parse(readFileSync(absManifest, "utf8"));
   const baseDir = args.dir ? resolve(process.cwd(), args.dir) : dirname(absManifest);
-  const { sections, assets } = validateManifest(manifest);
+  const { sections, groups, assets } = validateManifest(manifest);
 
   // Resolve + verify any placeholder file paths before touching the network.
   const uploads = [];
@@ -55,19 +55,19 @@ export async function cmdSeed(args) {
     }
   }
 
-  console.log(`${c.bold("Seeding")} ${assets.length} asset(s), ${sections.length} section(s), ${uploads.length} placeholder file(s)`);
+  console.log(`${c.bold("Seeding")} ${assets.length} asset(s), ${sections.length} section(s), ${groups.length} group(s), ${uploads.length} placeholder file(s)`);
   if (args["dry-run"]) {
     console.log(c.dim("(dry run — nothing sent)"));
-    for (const a of assets) console.log(`  • ${a.key} ${c.dim(`(${a.type})`)}${a.placeholder ? c.dim(` ← ${a.placeholder}`) : ""}`);
+    for (const a of assets) console.log(`  • ${a.key} ${c.dim(`(${a.type})`)}${a.group ? c.dim(` [${a.group}]`) : ""}${a.placeholder ? c.dim(` ← ${a.placeholder}`) : ""}`);
     return;
   }
 
   const client = new PortalClient(requireConfig());
 
   // 1. Upsert metadata. Strip the local-only `placeholder` path; the server
-  //    just needs key/name/type/description/requirements/section.
+  //    just needs key/name/type/description/requirements/section/group.
   const seedAssets = assets.map(({ placeholder, ...rest }) => rest);
-  const result = await client.seed(sections, seedAssets);
+  const result = await client.seed(sections, groups, seedAssets);
   const created = result.results.filter((r) => r.created).length;
   console.log(c.green(`✓ Upserted ${result.results.length} asset(s)`) + c.dim(` (${created} new)`));
 
@@ -102,8 +102,13 @@ const VALID_TYPES = ["image", "video", "audio", "music", "sound", "level", "mode
 export function validateManifest(m) {
   if (!m || typeof m !== "object") throw new Error("Manifest must be a JSON object");
   const sections = Array.isArray(m.sections) ? m.sections : [];
+  const groups = Array.isArray(m.groups) ? m.groups : [];
   const assets = Array.isArray(m.assets) ? m.assets : [];
   if (assets.length === 0) throw new Error("Manifest has no assets[]");
+
+  for (const [i, g] of groups.entries()) {
+    if (!g.name) throw new Error(`groups[${i}]: name is required`);
+  }
 
   const keys = new Set();
   for (const [i, a] of assets.entries()) {
@@ -119,8 +124,11 @@ export function validateManifest(m) {
     if (a.requirements && typeof a.requirements !== "object") {
       throw new Error(`assets[${i}] (${a.key}): requirements must be an object`);
     }
+    if (a.group && typeof a.group !== "string") {
+      throw new Error(`assets[${i}] (${a.key}): group must be a group name (string)`);
+    }
   }
-  return { sections, assets };
+  return { sections, groups, assets };
 }
 
 export { CONFIG_PATH };

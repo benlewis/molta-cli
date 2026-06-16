@@ -45,12 +45,19 @@ the bytes as the asset's initial placeholder version.
   "sections": [
     { "name": "Character Art", "description": "optional" }
   ],
+  "groups": [                        // optional: assets that ship together
+    { "name": "Explosion animation", "section": "Character Art",
+      "description": "frames delivered as a unit" }
+  ],
   "assets": [
     {
       "key": "hero_ship",            // REQUIRED, lower_snake_case, stable SDK id
       "name": "Hero ship sprite",    // REQUIRED, human label
       "type": "image",               // image|video|audio|music|sound|level|model|font|text|data|other
       "section": "Character Art",    // optional; created if missing
+      "group": "Explosion animation",// optional group name; created if missing.
+                                     //   The contractor must upload every asset in
+                                     //   a group before they can Share it.
       "description": "What you want — style, mood, references…",
       "requirements": {              // optional, free-form but these keys render nicely:
         "width": 256, "height": 256, "format": "png", "max_kb": 120,
