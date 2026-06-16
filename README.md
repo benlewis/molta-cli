@@ -101,6 +101,7 @@ version of this guidance.
 | `seed <manifest> [--dir] [--dry-run]` | Upsert sections/assets, upload placeholders |
 | `push --key <k> --file <p> [--final]` | Upload a single asset version |
 | `bake [--out <dir>] [--require-final]` | Download published assets to bundle in a production build |
+| `status` | Report production-readiness (are all assets finalized?) |
 
 ## Bake for production
 
@@ -108,12 +109,18 @@ The runtime SDK downloads assets over the air in DEV/TEST builds. For a
 production build you **bake** the finalized assets into the app:
 
 ```bash
+asset-portal status                                   # READY / NOT READY report
 asset-portal bake --out AssetPortalBaked --require-final
 ```
 
-This downloads every published asset and writes `asset-portal-manifest.json`
-alongside the files into `AssetPortalBaked/`. With `--require-final` it aborts
-unless every asset is **Done** (so you never ship a placeholder or in-review
-version). Add the folder to your app target — see
-[`swift/AssetPortalKit/README.md`](../../swift/AssetPortalKit/README.md). In
-release builds the SDK loads these bundled files and never contacts the portal.
+`bake` downloads every published asset and writes into `AssetPortalBaked/`:
+- the asset files,
+- `asset-portal-manifest.json`,
+- **`AssetPortalBaked.swift`** — a generated, zero-dependency accessor so a
+  production build can load baked assets *without* linking AssetPortalKit at all.
+
+With `--require-final` it aborts unless every asset is **Done** (so you never ship
+a placeholder or in-review version). Both `bake` and `status` print a clear
+**✅ READY / ⛔ NOT READY FOR PRODUCTION** summary. See
+[`swift/AssetPortalKit/README.md`](../../swift/AssetPortalKit/README.md) for how to
+exclude the downloader from release builds.
