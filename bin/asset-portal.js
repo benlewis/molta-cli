@@ -19,7 +19,7 @@ function parseArgs(argv) {
 }
 
 const HELP = `
-asset-portal — seed and manage an Asset Portal
+asset-portal — seed and manage a Molta portal
 
 Usage:
   asset-portal login --url <portal-url> --token <apt_...>   Connect & save credentials

@@ -1,7 +1,7 @@
 # asset-portal CLI
 
 A dependency-free Node CLI (macOS/Linux/Windows, Node ≥ 18.17) to seed and manage
-an [Asset Portal](../../README.md). Designed so an AI like **Claude Code** can
+an [Molta](../../README.md). Designed so an AI like **Claude Code** can
 analyze a game's codebase, extract its assets, write requirements, and hand a
 manifest to this tool in one shot.
 
@@ -21,7 +21,7 @@ node packages/cli/bin/asset-portal.js --help
 2. Save it (stored at `~/.asset-portal/config.json`, mode 600):
 
 ```bash
-asset-portal login --url https://your-portal.vercel.app --token apt_xxxxxxxx…
+asset-portal login --url https://molta.dev --token apt_xxxxxxxx…
 asset-portal whoami        # prints the portal name + 6-digit access code
 ```
 

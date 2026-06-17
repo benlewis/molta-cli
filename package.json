@@ -1,7 +1,7 @@
 {
   "name": "asset-portal-cli",
   "version": "0.1.0",
-  "description": "Seed and manage an Asset Portal from the command line (macOS/Linux/Windows).",
+  "description": "Seed and manage a Molta portal from the command line (macOS/Linux/Windows).",
   "type": "module",
   "bin": {
     "asset-portal": "bin/asset-portal.js"
