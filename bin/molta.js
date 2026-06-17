@@ -19,22 +19,22 @@ function parseArgs(argv) {
 }
 
 const HELP = `
-asset-portal — seed and manage a Molta portal
+molta — seed and manage a Molta portal
 
 Usage:
-  asset-portal login --url <portal-url> --token <apt_...>   Connect & save credentials
-  asset-portal whoami                                       Show the target portal + access code
-  asset-portal seed <manifest.json> [--dir <root>] [--dry-run] [--bump | --schema-version <N>]
+  molta login --url <portal-url> --token <apt_...>   Connect & save credentials
+  molta whoami                                       Show the target portal + access code
+  molta seed <manifest.json> [--dir <root>] [--dry-run] [--bump | --schema-version <N>]
                                                             Upsert assets, upload placeholders, optionally bump schema version
-  asset-portal push --key <asset_key> --file <path> [--final]
+  molta push --key <asset_key> --file <path> [--final]
                                                             Upload a single version
-  asset-portal bake [--out <dir>] [--require-final]         Download published assets to bundle in
-                                                            a production build (default ./AssetPortalBaked)
-  asset-portal status                                       Report production-readiness (all assets done?)
-  asset-portal bump-version [--to <N>]                       Bump the asset schema version (old apps must update)
+  molta bake [--out <dir>] [--require-final]         Download published assets to bundle in
+                                                            a production build (default ./MoltaBaked)
+  molta status                                       Report production-readiness (all assets done?)
+  molta bump-version [--to <N>]                       Bump the asset schema version (old apps must update)
 
 Environment:
-  ASSET_PORTAL_URL, ASSET_PORTAL_TOKEN   override saved config
+  MOLTA_URL, MOLTA_TOKEN   override saved config
 
 Seed manifest format: see packages/cli/README.md
 `;

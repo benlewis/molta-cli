@@ -1,4 +1,4 @@
-# asset-portal CLI
+# molta CLI
 
 A dependency-free Node CLI (macOS/Linux/Windows, Node ≥ 18.17) to seed and manage
 an [Molta](../../README.md). Designed so an AI like **Claude Code** can
@@ -10,28 +10,28 @@ manifest to this tool in one shot.
 ```bash
 # From the monorepo
 npm install
-npm link --workspace=packages/cli      # exposes `asset-portal` globally
+npm link --workspace=packages/cli      # exposes `molta` globally
 # …or run directly
-node packages/cli/bin/asset-portal.js --help
+node packages/cli/bin/molta.js --help
 ```
 
 ## Authenticate
 
 1. In the portal, open your project → **CLI / API tokens** → generate one.
-2. Save it (stored at `~/.asset-portal/config.json`, mode 600):
+2. Save it (stored at `~/.molta/config.json`, mode 600):
 
 ```bash
-asset-portal login --url https://molta.dev --token apt_xxxxxxxx…
-asset-portal whoami        # prints the portal name + 6-digit access code
+molta login --url https://molta.dev --token apt_xxxxxxxx…
+molta whoami        # prints the portal name + 6-digit access code
 ```
 
-Or skip the file and use env vars: `ASSET_PORTAL_URL`, `ASSET_PORTAL_TOKEN`.
+Or skip the file and use env vars: `MOLTA_URL`, `MOLTA_TOKEN`.
 
 ## Seed
 
 ```bash
-asset-portal seed game-assets.manifest.json --dir ./extracted-assets
-asset-portal seed game-assets.manifest.json --dry-run   # validate, send nothing
+molta seed game-assets.manifest.json --dir ./extracted-assets
+molta seed game-assets.manifest.json --dry-run   # validate, send nothing
 ```
 
 `seed` is **idempotent** — run it again after editing the manifest and it updates
@@ -77,7 +77,7 @@ See [`examples/galaxy-raiders.manifest.json`](./examples/galaxy-raiders.manifest
 The whole point: point Claude Code at your game and let it produce the manifest.
 A prompt that works well:
 
-> Analyze this codebase and produce an `asset-portal` seed manifest
+> Analyze this codebase and produce an `molta` seed manifest
 > (`game-assets.manifest.json`). Find every art, audio, music, video, level, and
 > font asset the game loads — search for image/sound loading calls, asset
 > catalogs, `Resources/` and `Assets/` folders, and file references in code.
@@ -87,7 +87,7 @@ A prompt that works well:
 > sprite/atlas, duration/loop for audio, format from the file extension). If a
 > current asset file exists, set `placeholder` to its path so it's uploaded as
 > the starting point. Follow the schema in `packages/cli/README.md`. Then run:
-> `asset-portal seed game-assets.manifest.json --dry-run` and fix any errors.
+> `molta seed game-assets.manifest.json --dry-run` and fix any errors.
 
 The repo's [`SEEDING.md`](../../SEEDING.md) contains a longer, copy-pasteable
 version of this guidance.
@@ -110,9 +110,9 @@ Each portal has a **schema version** — the minimum app build required to handl
 its current assets. When you add asset types that need a new app build, bump it:
 
 ```bash
-asset-portal bump-version                 # +1
-asset-portal seed new-assets.json --bump  # seed and bump together
-asset-portal bump-version --to 5          # set explicitly
+molta bump-version                 # +1
+molta seed new-assets.json --bump  # seed and bump together
+molta bump-version --to 5          # set explicitly
 ```
 
 Build the app with `supportedSchemaVersion` ≥ this (see the SDK README). Older
@@ -125,18 +125,18 @@ The runtime SDK downloads assets over the air in DEV/TEST builds. For a
 production build you **bake** the finalized assets into the app:
 
 ```bash
-asset-portal status                                   # READY / NOT READY report
-asset-portal bake --out AssetPortalBaked --require-final
+molta status                                   # READY / NOT READY report
+molta bake --out MoltaBaked --require-final
 ```
 
-`bake` downloads every published asset and writes into `AssetPortalBaked/`:
+`bake` downloads every published asset and writes into `MoltaBaked/`:
 - the asset files,
-- `asset-portal-manifest.json`,
-- **`AssetPortalBaked.swift`** — a generated, zero-dependency accessor so a
-  production build can load baked assets *without* linking AssetPortalKit at all.
+- `molta-manifest.json`,
+- **`MoltaBaked.swift`** — a generated, zero-dependency accessor so a
+  production build can load baked assets *without* linking MoltaKit at all.
 
 With `--require-final` it aborts unless every asset is **Done** (so you never ship
 a placeholder or in-review version). Both `bake` and `status` print a clear
 **✅ READY / ⛔ NOT READY FOR PRODUCTION** summary. See
-[`swift/AssetPortalKit/README.md`](../../swift/AssetPortalKit/README.md) for how to
+[`swift/MoltaKit/README.md`](../../swift/MoltaKit/README.md) for how to
 exclude the downloader from release builds.
