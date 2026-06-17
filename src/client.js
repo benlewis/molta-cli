@@ -37,14 +37,14 @@ export class PortalClient {
   }
 
   /** Verify the token and return { id, name, access_code, asset_count }. */
-  project() { return this.#json("/api/cli/project"); }
+  project() { return this.#json("/api/v1/cli/project"); }
 
   /** All assets' published version + status + signed download URL, for baking. */
-  bake() { return this.#json("/api/cli/bake"); }
+  bake() { return this.#json("/api/v1/cli/bake"); }
 
   /** Idempotently upsert sections + groups + assets (+ optional version bump/set). */
   seed(sections, groups, assets, opts = {}) {
-    return this.#json("/api/cli/seed", {
+    return this.#json("/api/v1/cli/seed", {
       method: "POST",
       body: { sections, groups, assets, schema_version: opts.schemaVersion, bump: opts.bump },
     });
@@ -52,7 +52,7 @@ export class PortalClient {
 
   /** Bump or set the project's asset-schema version. */
   setSchemaVersion({ bump, version } = {}) {
-    return this.#json("/api/cli/schema-version", { method: "POST", body: { bump, version } });
+    return this.#json("/api/v1/cli/schema-version", { method: "POST", body: { bump, version } });
   }
 
   /** Upload a placeholder file for an existing asset_key (multipart). */
@@ -63,7 +63,7 @@ export class PortalClient {
     form.append("is_placeholder", String(isPlaceholder));
     form.append("file", new Blob([buf], { type: guessMime(filePath) }), basename(filePath));
 
-    const res = await fetch(this.base + "/api/cli/upload", {
+    const res = await fetch(this.base + "/api/v1/cli/upload", {
       method: "POST",
       headers: { Authorization: `Bearer ${this.token}` },
       body: form,
