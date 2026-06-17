@@ -42,9 +42,17 @@ export class PortalClient {
   /** All assets' published version + status + signed download URL, for baking. */
   bake() { return this.#json("/api/cli/bake"); }
 
-  /** Idempotently upsert sections + groups + assets. */
-  seed(sections, groups, assets) {
-    return this.#json("/api/cli/seed", { method: "POST", body: { sections, groups, assets } });
+  /** Idempotently upsert sections + groups + assets (+ optional version bump/set). */
+  seed(sections, groups, assets, opts = {}) {
+    return this.#json("/api/cli/seed", {
+      method: "POST",
+      body: { sections, groups, assets, schema_version: opts.schemaVersion, bump: opts.bump },
+    });
+  }
+
+  /** Bump or set the project's asset-schema version. */
+  setSchemaVersion({ bump, version } = {}) {
+    return this.#json("/api/cli/schema-version", { method: "POST", body: { bump, version } });
   }
 
   /** Upload a placeholder file for an existing asset_key (multipart). */

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cmdLogin, cmdWhoami, cmdSeed, cmdPush, cmdBake, cmdStatus } from "../src/commands.js";
+import { cmdLogin, cmdWhoami, cmdSeed, cmdPush, cmdBake, cmdStatus, cmdBumpVersion } from "../src/commands.js";
 
 // Minimal argv parser: collects --flags (with values or boolean) and positionals.
 function parseArgs(argv) {
@@ -24,13 +24,14 @@ asset-portal — seed and manage an Asset Portal
 Usage:
   asset-portal login --url <portal-url> --token <apt_...>   Connect & save credentials
   asset-portal whoami                                       Show the target portal + access code
-  asset-portal seed <manifest.json> [--dir <root>] [--dry-run]
-                                                            Upsert assets and upload placeholders
+  asset-portal seed <manifest.json> [--dir <root>] [--dry-run] [--bump | --schema-version <N>]
+                                                            Upsert assets, upload placeholders, optionally bump schema version
   asset-portal push --key <asset_key> --file <path> [--final]
                                                             Upload a single version
   asset-portal bake [--out <dir>] [--require-final]         Download published assets to bundle in
                                                             a production build (default ./AssetPortalBaked)
   asset-portal status                                       Report production-readiness (all assets done?)
+  asset-portal bump-version [--to <N>]                       Bump the asset schema version (old apps must update)
 
 Environment:
   ASSET_PORTAL_URL, ASSET_PORTAL_TOKEN   override saved config
@@ -50,6 +51,7 @@ async function main() {
       case "push": await cmdPush(args); break;
       case "bake": await cmdBake(args); break;
       case "status": await cmdStatus(args); break;
+      case "bump-version": await cmdBumpVersion(args); break;
       case undefined: case "help": case "--help": case "-h":
         console.log(HELP); break;
       default:

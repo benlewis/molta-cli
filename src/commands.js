@@ -45,8 +45,22 @@ export async function cmdWhoami() {
   const client = new PortalClient(requireConfig());
   const p = await client.project();
   console.log(`${c.bold(p.name)}`);
-  console.log(`  Access code: ${c.cyan(p.access_code)}`);
-  console.log(`  Assets:      ${p.asset_count}`);
+  console.log(`  Access code:    ${c.cyan(p.access_code)}`);
+  console.log(`  Assets:         ${p.asset_count}`);
+  console.log(`  Schema version: ${c.cyan(p.schema_version ?? 1)}`);
+}
+
+export async function cmdBumpVersion(args) {
+  // Increment (or set) the project's asset-schema version. Apps built for an
+  // older version will be told to update before they can sync.
+  const client = new PortalClient(requireConfig());
+  const to = args.to != null ? Number(args.to) : undefined;
+  const { schema_version } = await client.setSchemaVersion(
+    to != null ? { version: to } : { bump: true }
+  );
+  console.log(c.green(`✓ Asset schema version is now ${schema_version}`));
+  console.log(c.dim("  Build your app with supportedSchemaVersion >= this. Older apps will be"));
+  console.log(c.dim("  told to update before they can download assets."));
 }
 
 export async function cmdSeed(args) {
@@ -78,12 +92,19 @@ export async function cmdSeed(args) {
 
   const client = new PortalClient(requireConfig());
 
+  // Schema version: from the manifest, or --schema-version N, or --bump.
+  const schemaVersion = typeof manifest.schema_version === "number" ? manifest.schema_version
+    : (args["schema-version"] != null ? Number(args["schema-version"]) : undefined);
+
   // 1. Upsert metadata. Strip the local-only `placeholder` path; the server
   //    just needs key/name/type/description/requirements/section/group.
   const seedAssets = assets.map(({ placeholder, ...rest }) => rest);
-  const result = await client.seed(sections, groups, seedAssets);
+  const result = await client.seed(sections, groups, seedAssets, { schemaVersion, bump: !!args.bump });
   const created = result.results.filter((r) => r.created).length;
   console.log(c.green(`✓ Upserted ${result.results.length} asset(s)`) + c.dim(` (${created} new)`));
+  if (args.bump || schemaVersion != null) {
+    console.log(c.cyan(`  Asset schema version → ${result.schema_version}`) + c.dim(" (apps below this must update)"));
+  }
 
   // 2. Upload placeholder files.
   for (const u of uploads) {
@@ -154,13 +175,13 @@ export async function cmdBake(args) {
 export async function cmdStatus() {
   // Report production-readiness without downloading anything.
   const client = new PortalClient(requireConfig());
-  const [{ asset_count: total, name }, { assets }] = await Promise.all([client.project(), client.bake()]);
+  const [{ asset_count: total, name, schema_version }, { assets }] = await Promise.all([client.project(), client.bake()]);
   const done = assets.filter((a) => a.is_final).length;
   const placeholder = assets.filter((a) => a.is_placeholder).length;
   const preview = assets.length - done - placeholder;
   const unpublished = Math.max(0, total - assets.length);
 
-  console.log(`${c.bold(name)} — ${total} asset(s)`);
+  console.log(`${c.bold(name)} — ${total} asset(s) · schema v${schema_version ?? 1}`);
   console.log(`  ${c.green(`${done} done`)} · ${c.yellow(`${preview} preview`)} · ${c.red(`${placeholder} placeholder`)} · ${c.dim(`${unpublished} not uploaded`)}`);
   reportReadiness(total, assets.length, assets.filter((a) => !a.is_final));
 }

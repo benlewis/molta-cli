@@ -102,6 +102,22 @@ version of this guidance.
 | `push --key <k> --file <p> [--final]` | Upload a single asset version |
 | `bake [--out <dir>] [--require-final]` | Download published assets to bundle in a production build |
 | `status` | Report production-readiness (are all assets finalized?) |
+| `bump-version [--to <N>]` | Bump the asset schema version (old app builds must update) |
+
+## Asset schema versioning
+
+Each portal has a **schema version** — the minimum app build required to handle
+its current assets. When you add asset types that need a new app build, bump it:
+
+```bash
+asset-portal bump-version                 # +1
+asset-portal seed new-assets.json --bump  # seed and bump together
+asset-portal bump-version --to 5          # set explicitly
+```
+
+Build the app with `supportedSchemaVersion` ≥ this (see the SDK README). Older
+apps get an "app out of date — please update" error from the SDK instead of
+downloading assets they can't use. `whoami` / `status` show the current version.
 
 ## Bake for production
 
