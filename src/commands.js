@@ -143,19 +143,25 @@ export async function cmdBake(args) {
   mkdirSync(out, { recursive: true });
   console.log(`${c.bold("Baking")} ${assets.length} asset(s) from ${c.bold(project)} → ${out}`);
 
+  // Download in parallel (bounded) so a portal with many assets bakes quickly.
   const baked = [];
   const notFinal = [];
-  for (const a of assets) {
-    const file = `${a.key}.${extFor(a)}`;
-    process.stdout.write(`  ↓ ${a.key} … `);
-    const res = await fetch(a.url);
-    if (!res.ok) { console.log(c.red(`failed (${res.status})`)); continue; }
-    writeFileSync(join(out, file), Buffer.from(await res.arrayBuffer()));
-    baked.push({ key: a.key, name: a.name, type: a.type, version: a.version, checksum: a.checksum, file, metadata: a.metadata || {} });
-    if (!a.is_final) notFinal.push(a);
-    const tag = a.is_final ? c.green("done") : a.is_placeholder ? c.red("placeholder!") : c.yellow("preview");
-    console.log(`${file} ${c.dim("(")}${tag}${c.dim(")")}`);
+  const POOL = 8;
+  let next = 0;
+  async function worker() {
+    while (next < assets.length) {
+      const a = assets[next++];
+      const file = `${a.key}.${extFor(a)}`;
+      const res = await fetch(a.url);
+      if (!res.ok) { console.log(`  ↓ ${a.key} … ${c.red(`failed (${res.status})`)}`); continue; }
+      writeFileSync(join(out, file), Buffer.from(await res.arrayBuffer()));
+      baked.push({ key: a.key, name: a.name, type: a.type, version: a.version, checksum: a.checksum, file, metadata: a.metadata || {} });
+      if (!a.is_final) notFinal.push(a);
+      const tag = a.is_final ? c.green("done") : a.is_placeholder ? c.red("placeholder!") : c.yellow("preview");
+      console.log(`  ↓ ${a.key} … ${file} ${c.dim("(")}${tag}${c.dim(")")}`);
+    }
   }
+  await Promise.all(Array.from({ length: Math.min(POOL, assets.length) }, worker));
 
   writeFileSync(join(out, "molta-manifest.json"),
     JSON.stringify({ project, baked_at: new Date().toISOString(), assets: baked }, null, 2));
