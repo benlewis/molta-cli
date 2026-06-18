@@ -7,12 +7,20 @@ manifest to this tool in one shot.
 
 ## Install
 
+End users (zero dependencies, Node ≥ 18.17):
+
 ```bash
-# From the monorepo
+npm install -g github:benlewis/molta-cli   # → `molta` command
+# npm install -g molta-cli                 # from npm, once published
+# npx github:benlewis/molta-cli --help     # run without installing
+```
+
+From the monorepo (for development):
+
+```bash
 npm install
-npm link --workspace=packages/cli      # exposes `molta` globally
-# …or run directly
-node packages/cli/bin/molta.js --help
+npm link --workspace=packages/cli          # exposes `molta` globally
+# …or: node packages/cli/bin/molta.js --help
 ```
 
 ## Authenticate
