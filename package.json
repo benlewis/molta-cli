@@ -2,10 +2,18 @@
   "name": "molta-cli",
   "version": "0.1.0",
   "description": "Seed and manage a Molta portal from the command line (macOS/Linux/Windows).",
+  "keywords": ["molta", "game-assets", "cli", "gamedev", "asset-pipeline"],
+  "homepage": "https://molta.dev",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "molta": "bin/molta.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benlewis/molta-cli.git"
+  },
+  "bugs": { "url": "https://github.com/benlewis/molta-cli/issues" },
   "scripts": {
     "start": "node bin/molta.js"
   },
