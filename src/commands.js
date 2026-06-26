@@ -1,7 +1,16 @@
 import { resolve, dirname, isAbsolute, join } from "node:path";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { createInterface } from "node:readline";
 import { PortalClient, guessMime } from "./client.js";
 import { loadConfig, saveConfig, requireConfig, CONFIG_PATH } from "./config.js";
+
+/** Yes/no prompt on stdin (zero-dep). Returns true only for y/yes. */
+function confirm(question) {
+  return new Promise((res) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, (ans) => { rl.close(); res(/^y(es)?$/i.test(ans.trim())); });
+  });
+}
 
 const c = {
   dim: (s) => `\x1b[2m${s}\x1b[0m`,
@@ -65,7 +74,7 @@ export async function cmdBumpVersion(args) {
 
 export async function cmdSeed(args) {
   const manifestPath = args._[0];
-  if (!manifestPath) throw new Error("Usage: molta seed <manifest.json> [--dir <assets-root>] [--dry-run]");
+  if (!manifestPath) throw new Error("Usage: molta seed <manifest.json> [--dir <assets-root>] [--dry-run] [--prune [--yes]]");
   const absManifest = resolve(process.cwd(), manifestPath);
   if (!existsSync(absManifest)) throw new Error(`Manifest not found: ${absManifest}`);
 
@@ -83,8 +92,12 @@ export async function cmdSeed(args) {
     }
   }
 
-  console.log(`${c.bold("Seeding")} ${assets.length} asset(s), ${sections.length} section(s), ${groups.length} group(s), ${uploads.length} placeholder file(s)`);
-  if (args["dry-run"]) {
+  const prune = !!args.prune;
+  const dryRun = !!args["dry-run"];
+  console.log(`${c.bold("Seeding")} ${assets.length} asset(s), ${sections.length} section(s), ${groups.length} group(s), ${uploads.length} placeholder file(s)${prune ? c.yellow(" · prune on") : ""}`);
+
+  // Plain dry run (no prune): client-side validation only, never contacts the server.
+  if (dryRun && !prune) {
     console.log(c.dim("(dry run — nothing sent)"));
     for (const a of assets) console.log(`  • ${a.key} ${c.dim(`(${a.type})`)}${a.group ? c.dim(` [${a.group}]`) : ""}${a.placeholder ? c.dim(` ← ${a.placeholder}`) : ""}`);
     return;
@@ -96,12 +109,28 @@ export async function cmdSeed(args) {
   const schemaVersion = typeof manifest.schema_version === "number" ? manifest.schema_version
     : (args["schema-version"] != null ? Number(args["schema-version"]) : undefined);
 
-  // 1. Upsert metadata. Strip the local-only `placeholder` path; the server
-  //    just needs key/name/type/description/requirements/section/group.
+  // Strip the local-only `placeholder` path; the server just needs the metadata.
   const seedAssets = assets.map(({ placeholder, ...rest }) => rest);
-  const result = await client.seed(sections, groups, seedAssets, { schemaVersion, bump: !!args.bump });
+
+  // Prune: preview the diff, list what would be deleted, then confirm.
+  if (prune) {
+    const preview = await client.seed(sections, groups, seedAssets, { prune: true, dryRun: true });
+    console.log(`  ${c.green(`${preview.created.length} new`)} · ${preview.updated.length} update · ${c.red(`${preview.pruned.length} to delete`)}`);
+    for (const p of preview.pruned) console.log(c.red(`    ✗ ${p.key}`) + c.dim(` (${p.name})`));
+    if (dryRun) { console.log(c.dim("(dry run — nothing changed)")); return; }
+    if (preview.pruned.length && !args.yes) {
+      const ok = await confirm(`Delete ${preview.pruned.length} asset(s) not in the manifest? This cascades versions/comments. (y/N) `);
+      if (!ok) { console.log(c.yellow("Aborted — nothing changed.")); return; }
+    }
+  }
+
+  // Real seed (with prune when requested).
+  const result = await client.seed(sections, groups, seedAssets, { schemaVersion, bump: !!args.bump, prune });
   const created = result.results.filter((r) => r.created).length;
   console.log(c.green(`✓ Upserted ${result.results.length} asset(s)`) + c.dim(` (${created} new)`));
+  if (result.pruned?.length) {
+    console.log(c.red(`✗ Pruned ${result.pruned.length} asset(s)`) + c.dim(` (${result.pruned.map((p) => p.key).join(", ")})`));
+  }
   if (args.bump || schemaVersion != null) {
     console.log(c.cyan(`  Asset schema version → ${result.schema_version}`) + c.dim(" (apps below this must update)"));
   }

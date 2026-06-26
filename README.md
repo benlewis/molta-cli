@@ -40,7 +40,16 @@ Or skip the file and use env vars: `MOLTA_URL`, `MOLTA_TOKEN`.
 ```bash
 molta seed game-assets.manifest.json --dir ./extracted-assets
 molta seed game-assets.manifest.json --dry-run   # validate, send nothing
+molta seed game-assets.manifest.json --prune      # make the manifest the source of truth
+molta seed game-assets.manifest.json --prune --dry-run   # preview what add/update/delete
+molta seed game-assets.manifest.json --prune --yes       # skip the delete confirmation (CI)
 ```
+
+**`--prune`** deletes any assets in the portal that aren't in the manifest, so the
+manifest becomes the single source of truth. It first prints the diff
+(new / update / delete) and **asks for confirmation** before deleting (cascades
+the asset's versions/comments); pass `--yes` to skip the prompt, or `--dry-run`
+to preview without changing anything.
 
 `seed` is **idempotent** — run it again after editing the manifest and it updates
 in place (matched by `key`). For each asset with a `placeholder` file it uploads
@@ -106,7 +115,7 @@ version of this guidance.
 | --- | --- |
 | `login` / `init` | Validate + save portal URL and API token |
 | `whoami` | Show the target portal name, access code, asset count |
-| `seed <manifest> [--dir] [--dry-run]` | Upsert sections/assets, upload placeholders |
+| `seed <manifest> [--dir] [--dry-run] [--prune] [--yes]` | Upsert sections/assets, upload placeholders; `--prune` deletes assets not in the manifest |
 | `push --key <k> --file <p> [--final]` | Upload a single asset version |
 | `bake [--out <dir>] [--require-final]` | Download published assets to bundle in a production build |
 | `status` | Report production-readiness (are all assets finalized?) |

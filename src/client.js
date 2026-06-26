@@ -42,11 +42,16 @@ export class PortalClient {
   /** All assets' published version + status + signed download URL, for baking. */
   bake() { return this.#json("/api/v1/cli/bake"); }
 
-  /** Idempotently upsert sections + groups + assets (+ optional version bump/set). */
+  /** Idempotently upsert sections + groups + assets (+ optional version bump/set,
+   *  prune of assets not in the manifest, and dry-run preview). */
   seed(sections, groups, assets, opts = {}) {
     return this.#json("/api/v1/cli/seed", {
       method: "POST",
-      body: { sections, groups, assets, schema_version: opts.schemaVersion, bump: opts.bump },
+      body: {
+        sections, groups, assets,
+        schema_version: opts.schemaVersion, bump: opts.bump,
+        prune: opts.prune, dry_run: opts.dryRun,
+      },
     });
   }
 
