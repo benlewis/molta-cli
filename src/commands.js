@@ -198,6 +198,34 @@ export async function cmdAdd(args) {
   console.log(c.dim("  The file is downloadable from the portal now; accept it there to mark it Accepted."));
 }
 
+// Delete an asset by key (cascades its versions/comments).
+export async function cmdRm(args) {
+  const key = args._[0];
+  if (!key) throw new Error("Usage: molta rm <asset_key> [--yes]");
+  if (!args.yes) {
+    const ok = await confirm(`Delete asset "${key}"? This also removes its versions and comments. (y/N) `);
+    if (!ok) { console.log(c.yellow("Aborted — nothing changed.")); return; }
+  }
+  const client = new PortalClient(requireConfig());
+  await client.deleteAsset(key);
+  console.log(c.green(`✓ Deleted ${key}`));
+}
+
+// Rename an asset: change its asset_key and/or display name.
+export async function cmdRename(args) {
+  const key = args._[0];
+  const newKey = args._[1];  // optional positional
+  const name = typeof args.name === "string" ? args.name : undefined;
+  if (!key || (!newKey && !name)) {
+    throw new Error('Usage: molta rename <asset_key> [<new_key>] [--name "New name"]');
+  }
+  const client = new PortalClient(requireConfig());
+  const { renamed } = await client.renameAsset(key, newKey, name);
+  const keyChanged = renamed.to !== renamed.from;
+  console.log(c.green(`✓ Renamed ${renamed.from}`) + (keyChanged ? ` → ${renamed.to}` : "") + (name ? c.dim(` · name "${renamed.name}"`) : ""));
+  if (keyChanged) console.log(c.dim("  asset_key is the SDK id — update any game code that referenced the old key."));
+}
+
 export async function cmdBake(args) {
   // Download every published asset and write a baked manifest + a zero-dependency
   // Swift accessor, to bundle assets directly into a production build.

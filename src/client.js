@@ -60,6 +60,16 @@ export class PortalClient {
     return this.#json("/api/v1/cli/schema-version", { method: "POST", body: { bump, version } });
   }
 
+  /** Delete an asset by key (cascades its versions/comments). */
+  deleteAsset(key) {
+    return this.#json("/api/v1/cli/asset", { method: "POST", body: { action: "delete", key } });
+  }
+
+  /** Rename an asset: change its asset_key and/or display name. */
+  renameAsset(key, newKey, name) {
+    return this.#json("/api/v1/cli/asset", { method: "POST", body: { action: "rename", key, new_key: newKey, name } });
+  }
+
   /** Upload a placeholder file for an existing asset_key (multipart). */
   async upload(assetKey, filePath, { isPlaceholder = true } = {}) {
     const buf = readFileSync(filePath);

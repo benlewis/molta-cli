@@ -72,6 +72,21 @@ from the portal but never delivered to the app via the SDK or `bake`. The `--typ
 is inferred from the file (override with `--type`). The file is uploaded as a real
 version; accept it in the portal to mark it Accepted.
 
+## Delete & rename assets
+
+```bash
+molta rm old_sprite                       # asks to confirm; --yes to skip
+molta rm old_sprite --yes                 # delete without prompting
+
+molta rename hero_ship spaceship_hero      # change the SDK key
+molta rename hero_ship --name "Hero ship"  # change only the display name
+molta rename hero_ship spaceship_hero --name "Hero ship"
+```
+
+`rm` also removes the asset's versions and comments. Renaming the **key** changes
+the stable SDK id, so update any game code (`localURL(forKey:)`) that used the old
+one. (For bulk sync, `seed --prune` deletes everything not in your manifest.)
+
 ## Manifest format
 
 ```jsonc
@@ -138,6 +153,8 @@ version of this guidance.
 | `seed <manifest> [--dir] [--dry-run] [--prune] [--yes]` | Upsert sections/assets, upload placeholders; `--prune` deletes assets not in the manifest |
 | `push --key <k> --file <p> [--final]` | Upload a single asset version |
 | `add <key> <file> [--name] [--type] [--download-only] [--section] [--group]` | Create an asset **and** upload its file in one step |
+| `rm <key> [--yes]` | Delete an asset (cascades its versions/comments) |
+| `rename <key> [<new_key>] [--name "..."]` | Change an asset's key and/or display name |
 | `bake [--out <dir>] [--require-final]` | Download published assets to bundle in a production build |
 | `status` | Report production-readiness (are all assets finalized?) |
 | `bump-version [--to <N>]` | Bump the asset schema version (old app builds must update) |

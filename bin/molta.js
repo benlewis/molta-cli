@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cmdLogin, cmdWhoami, cmdSeed, cmdPush, cmdAdd, cmdBake, cmdStatus, cmdBumpVersion } from "../src/commands.js";
+import { cmdLogin, cmdWhoami, cmdSeed, cmdPush, cmdAdd, cmdRm, cmdRename, cmdBake, cmdStatus, cmdBumpVersion } from "../src/commands.js";
 
 // Minimal argv parser: collects --flags (with values or boolean) and positionals.
 function parseArgs(argv) {
@@ -31,6 +31,8 @@ Usage:
   molta add <asset_key> <file> [--name "..."] [--type <t>] [--download-only] [--section <s>] [--group <g>]
                                                             Create an asset and upload its file in one step
                                                             (--download-only = out-of-game / marketing)
+  molta rm <asset_key> [--yes]                       Delete an asset (and its versions/comments)
+  molta rename <asset_key> [<new_key>] [--name "..."]  Change an asset's key and/or display name
   molta bake [--out <dir>] [--require-final]         Download published assets to bundle in
                                                             a production build (default ./MoltaBaked)
   molta status                                       Report production-readiness (all assets done?)
@@ -53,6 +55,8 @@ async function main() {
       case "seed": await cmdSeed(args); break;
       case "push": await cmdPush(args); break;
       case "add": await cmdAdd(args); break;
+      case "rm": case "delete": await cmdRm(args); break;
+      case "rename": case "mv": await cmdRename(args); break;
       case "bake": await cmdBake(args); break;
       case "status": await cmdStatus(args); break;
       case "bump-version": await cmdBumpVersion(args); break;

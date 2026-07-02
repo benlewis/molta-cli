@@ -1,6 +1,6 @@
 {
   "name": "molta-cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Seed and manage a Molta portal from the command line (macOS/Linux/Windows).",
   "keywords": ["molta", "game-assets", "cli", "gamedev", "asset-pipeline"],
   "homepage": "https://molta.dev",
