@@ -305,6 +305,9 @@ export function validateManifest(m) {
     if (a.group && typeof a.group !== "string") {
       throw new Error(`assets[${i}] (${a.key}): group must be a group name (string)`);
     }
+    if (a.in_game != null && typeof a.in_game !== "boolean") {
+      throw new Error(`assets[${i}] (${a.key}): in_game must be true/false`);
+    }
   }
   return { sections, groups, assets };
 }

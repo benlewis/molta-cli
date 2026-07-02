@@ -75,6 +75,9 @@ the bytes as the asset's initial placeholder version.
       "group": "Explosion animation",// optional group name; created if missing.
                                      //   The contractor must upload every asset in
                                      //   a group before they can Share it.
+      "in_game": true,               // optional (default true). false = out-of-game /
+                                     //   download-only (marketing, key art, trailers) —
+                                     //   excluded from the SDK + bake manifests.
       "description": "What you want — style, mood, references…",
       "requirements": {              // optional, free-form but these keys render nicely:
         "width": 256, "height": 256, "format": "png", "max_kb": 120,
