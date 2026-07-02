@@ -55,6 +55,23 @@ to preview without changing anything.
 in place (matched by `key`). For each asset with a `placeholder` file it uploads
 the bytes as the asset's initial placeholder version.
 
+## Add a single asset from code
+
+For one-off files that aren't part of your game manifest — e.g. **out-of-game /
+marketing** assets (key art, trailers, press kits) — `add` creates the asset and
+uploads the file in one command:
+
+```bash
+molta add hero_ship ./art/hero.png --name "Hero ship"          # in-game asset
+molta add launch_trailer ./trailer.mp4 --download-only --name "Launch trailer"
+molta add key_art ./press/key_art.png --download-only --section Marketing
+```
+
+`--download-only` marks it **out-of-game** (`in_game: false`) — it's downloadable
+from the portal but never delivered to the app via the SDK or `bake`. The `--type`
+is inferred from the file (override with `--type`). The file is uploaded as a real
+version; accept it in the portal to mark it Accepted.
+
 ## Manifest format
 
 ```jsonc
@@ -120,6 +137,7 @@ version of this guidance.
 | `whoami` | Show the target portal name, access code, asset count |
 | `seed <manifest> [--dir] [--dry-run] [--prune] [--yes]` | Upsert sections/assets, upload placeholders; `--prune` deletes assets not in the manifest |
 | `push --key <k> --file <p> [--final]` | Upload a single asset version |
+| `add <key> <file> [--name] [--type] [--download-only] [--section] [--group]` | Create an asset **and** upload its file in one step |
 | `bake [--out <dir>] [--require-final]` | Download published assets to bundle in a production build |
 | `status` | Report production-readiness (are all assets finalized?) |
 | `bump-version [--to <N>]` | Bump the asset schema version (old app builds must update) |

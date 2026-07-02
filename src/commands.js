@@ -160,6 +160,44 @@ export async function cmdPush(args) {
   console.log(c.green(`✓ Uploaded ${key} as v${v.version_number}`));
 }
 
+function typeFromMime(mime) {
+  if (!mime) return "other";
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  if (mime.startsWith("audio/")) return "audio";
+  if (mime === "application/json") return "data";
+  return "other";
+}
+
+// Create an asset and upload its file in one shot — handy for out-of-game /
+// marketing assets (`--download-only`) that aren't part of your game manifest.
+export async function cmdAdd(args) {
+  const key = args._[0];
+  const file = args._[1] || args.file;
+  if (!key || !file) {
+    throw new Error('Usage: molta add <asset_key> <file> [--name "..."] [--type image] [--download-only] [--section <name>] [--group <name>]');
+  }
+  if (!/^[a-z0-9_]+$/.test(key)) throw new Error("asset_key must be lower_snake_case");
+  const absFile = resolve(process.cwd(), file);
+  if (!existsSync(absFile)) throw new Error(`File not found: ${absFile}`);
+
+  const name = typeof args.name === "string" ? args.name : key;
+  const type = typeof args.type === "string" ? args.type : typeFromMime(guessMime(absFile));
+  const inGame = !args["download-only"];
+
+  const client = new PortalClient(requireConfig());
+  // 1. Define (or update) the asset.
+  await client.seed([], [], [{
+    key, name, type, in_game: inGame,
+    section: typeof args.section === "string" ? args.section : undefined,
+    group: typeof args.group === "string" ? args.group : undefined,
+  }]);
+  // 2. Upload the file as a real (non-placeholder) version.
+  const v = await client.upload(key, absFile, { isPlaceholder: false });
+  console.log(c.green(`✓ Added ${key}`) + c.dim(` (${type}, ${inGame ? "in-game" : "download-only"}) → v${v.version_number}`));
+  console.log(c.dim("  The file is downloadable from the portal now; accept it there to mark it Accepted."));
+}
+
 export async function cmdBake(args) {
   // Download every published asset and write a baked manifest + a zero-dependency
   // Swift accessor, to bundle assets directly into a production build.
